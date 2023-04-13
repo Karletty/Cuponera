@@ -81,8 +81,8 @@ class ClientsController extends Controller
                         $mail->SMTPAuth = 'true';
                         $mail->Host = "smtp.gmail.com";
                         $mail->Port = 587;
-                        $mail->Username = "lacuponerakarle@gmail.com";
-                        $mail->Password = 'hbvykdlvrhcbgmqg';
+                        $mail->Username = MAIL_CREDENTIALS['userName'];
+                        $mail->Password = MAIL_CREDENTIALS['token'];
                         $mail->SetFrom('lacuponerakarle@gmail.com', 'La Cuponera');
                         $mail->AddAddress($userMail, 'Someone Else');
                         $mail->Subject = 'Cambio de contraseña';
@@ -93,13 +93,9 @@ class ClientsController extends Controller
 
                         $this->model->changePass($client['email'], $token);
 
-                        $_SESSION['user']['userType'] = $client['type_name'];
-                        $_SESSION['user']['userEmail'] = $client['email'];
-                        $_SESSION['user']['clientDUI'] = $client['dui'];
-                        $_SESSION['user']['userName'] = $client['first_name'] . ' ' . $client['last_name'];
                         $_SESSION['success_message'] = 'Su nueva contraseña ha sido enviada al correo';
 
-                        header('location: ' . PATH . '/Offers');
+                        header('location: ' . PATH . '/Clients/Login');
                         die();
                   } catch (Exception $e) {
                         var_dump($e);
@@ -197,13 +193,13 @@ class ClientsController extends Controller
                               $mail->SMTPAuth = 'true';
                               $mail->Host = "smtp.gmail.com";
                               $mail->Port = 587;
-                              $mail->Username = "lacuponerakarle@gmail.com";
-                              $mail->Password = 'hbvykdlvrhcbgmqg';
+                              $mail->Username = MAIL_CREDENTIALS['userName'];
+                              $mail->Password = MAIL_CREDENTIALS['token'];
                               $mail->SetFrom('lacuponerakarle@gmail.com', 'La Cuponera');
                               $mail->AddAddress($client['email'], 'Someone Else');
                               $mail->Subject = 'Verificación de usuario';
                               $mail->AddEmbeddedImage('Views/assets/img/banner.png', 'imagen');
-                              $mail->Body = '<img src="cid:imagen" height="auto" width="800px"><br><br><h3>Su token para autenticar su usuario es: ' . $client['token'] . '.</h3><br><h3>Haga click <a href="http://localhost' . PATH . '/Clients/verify">aquí</a> para autenticar su usuario</h3>';
+                              $mail->Body = '<img src="cid:imagen" height="auto" width="800px"><br><br><h3>Su token para autenticar su usuario es: <a href="' . VERIFY_PATH . '?user-email=' . $client['email'] . '&token=' . $client['token'] . '">' . $client['token'] . '</a>.</h3><br><h3>Haga click en el token para autenticar su usuario</h3>';
                               $mail->AltBody = 'To view the message, please use an HTML compatible email viewer!';
                               $mail->send();
 
@@ -235,15 +231,10 @@ class ClientsController extends Controller
 
       public function verify()
       {
-            $this->render('verify.php');
-      }
+            if (isset($_GET['user-email']) && isset($_GET['token'])) {
+                  $user = $this->model->get($_GET['user-email']);
 
-      public function verifyToken()
-      {
-            if (isset($_POST['verify'])) {
-                  $user = $this->model->get($_POST['user-email']);
-
-                  if (isset($user) && $user['token'] == $_POST['user-token']) {
+                  if (isset($user) && $user['token'] == $_GET['token']) {
 
                         try {
                               $mail = new PHPMailer(true);
@@ -254,8 +245,8 @@ class ClientsController extends Controller
                               $mail->SMTPAuth = 'true';
                               $mail->Host = "smtp.gmail.com";
                               $mail->Port = 587;
-                              $mail->Username = "lacuponerakarle@gmail.com";
-                              $mail->Password = 'hbvykdlvrhcbgmqg';
+                              $mail->Username = MAIL_CREDENTIALS['userName'];
+                              $mail->Password = MAIL_CREDENTIALS['token'];
                               $mail->SetFrom('lacuponerakarle@gmail.com', 'La Cuponera');
                               $mail->AddAddress($user['email'], 'Someone Else');
                               $mail->Subject = 'Verificación de usuario';
@@ -278,8 +269,9 @@ class ClientsController extends Controller
                         header('location: ' . PATH . '/Offers');
                         die();
                   } else {
-                        $_SESSION['error_message'] = 'El token no es válido';
-                        $this->render('verify.php', ['user' => ['email' => $user['email']]]);
+                        $_SESSION['error_message'] = 'Hubo un error, el token no es válido';
+
+                        header('location: ' . PATH . '/Offers');
                   }
             }
       }
@@ -310,8 +302,8 @@ class ClientsController extends Controller
                                     $mail->SMTPAuth = 'true';
                                     $mail->Host = "smtp.gmail.com";
                                     $mail->Port = 587;
-                                    $mail->Username = "lacuponerakarle@gmail.com";
-                                    $mail->Password = 'hbvykdlvrhcbgmqg';
+                                    $mail->Username = MAIL_CREDENTIALS['userName'];
+                                    $mail->Password = MAIL_CREDENTIALS['token'];
                                     $mail->SetFrom('lacuponerakarle@gmail.com', 'La Cuponera');
                                     $mail->AddAddress($clientEmail, 'Someone Else');
                                     $mail->Subject = 'Cambio de contraseña';
@@ -319,7 +311,7 @@ class ClientsController extends Controller
                                     $mail->Body = '<img src="cid:imagen" height="auto" width="800px"><br><br><h3>Su contraseña ha cambiado</h3>';
                                     $mail->AltBody = 'To view the message, please use an HTML compatible email viewer!';
                                     $mail->send();
-                                    
+
                                     $this->model->changePass($_SESSION['user']['userEmail'], $_POST['pass']);
 
                                     $_SESSION['success_message'] = 'Su contraseña se ha cambiado';

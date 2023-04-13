@@ -37,7 +37,7 @@ class OffersController extends Controller
             } else if ((isset($_SESSION['user']) && $_SESSION['user']['userType'] != 'empleado') || !isset($_SESSION['user'])) {
                   $offers = $this->model->get();
 
-                  if (isset($_SESSION['user']) && $_SESSION['user']['userType'] == 'cliente') {
+                  if (isset($_SESSION['user']) && $_SESSION['user']['userType'] == 'cliente' || !isset($_SESSION['user'])) {
                         $offers = array_filter($offers, function ($v, $k) {
                               return $v['available_qty'] > 0;
                         }, ARRAY_FILTER_USE_BOTH);
